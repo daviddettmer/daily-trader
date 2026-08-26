@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
+}
+
+.card {
+  @apply rounded-xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-black/20;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition;
+}
+
+.btn-primary {
+  @apply bg-emerald-600 text-white hover:bg-emerald-500;
+}
+
+.btn-secondary {
+  @apply border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700;
+}
+
+.btn-danger {
+  @apply border border-red-900/60 bg-red-950/40 text-red-200 hover:bg-red-900/40;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-emerald-500/40 focus:ring-2;
+}
+
+.label {
+  @apply mb-1 block text-sm text-slate-400;
+}
+
+.badge-buy {
+  @apply rounded-full bg-emerald-950/80 px-2 py-0.5 text-xs font-medium text-emerald-300;
+}
+
+.badge-sell {
+  @apply rounded-full bg-amber-950/80 px-2 py-0.5 text-xs font-medium text-amber-300;
+}
+
+.table-wrap {
+  @apply overflow-x-auto rounded-xl border border-slate-800;
+}
+
+table.data-table {
+  @apply w-full min-w-[720px] text-left text-sm;
+}
+
+table.data-table thead {
+  @apply bg-slate-900 text-slate-400;
+}
+
+table.data-table th,
+table.data-table td {
+  @apply px-4 py-3 align-top;
+}
+
+table.data-table tbody tr {
+  @apply border-t border-slate-800 hover:bg-slate-900/60;
+}
