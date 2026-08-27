@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddMoneyWithRefresh } from "@/components/AddMoneyWithRefresh";
+import { AppNavLinks } from "@/components/AppNavLinks";
 import { NextTradeBadge } from "@/components/NextTradeBadge";
 import { TestOrderPanel } from "@/components/TestOrderPanel";
 import { getOrdersForSymbol, getPosition, type AlpacaOrder } from "@/lib/alpaca";
@@ -55,12 +56,15 @@ export default async function SymbolDetailPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <div>
-        <Link href="/" className="text-sm text-emerald-300 hover:underline">
-          ← Back to dashboard
-        </Link>
-        <h1 className="mt-2 text-3xl font-semibold">{symbol}</h1>
-      </div>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Link href="/" className="text-sm text-emerald-300 hover:underline">
+            ← Back to dashboard
+          </Link>
+          <h1 className="mt-2 text-3xl font-semibold">{symbol}</h1>
+        </div>
+        <AppNavLinks />
+      </header>
 
       {alpacaError ? (
         <div className="rounded-lg border border-red-900/50 bg-red-950/20 px-4 py-3 text-sm text-red-200">

@@ -1,9 +1,11 @@
 import { AddTickerForm } from "@/components/AddTickerForm";
+import { AppNavLinks } from "@/components/AppNavLinks";
 import { AppTitle } from "@/components/AppTitle";
 import { EquityChart } from "@/components/EquityChart";
 import { LogoutButton } from "@/components/LogoutButton";
 import { WatchlistTable } from "@/components/WatchlistTable";
 import { getDashboardData } from "@/lib/dashboard";
+import { config } from "@/lib/config";
 import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -22,12 +24,22 @@ export default async function DashboardPage() {
             Overnight buy-at-close / sell-at-open compounding strategy
           </p>
         </div>
-        <LogoutButton />
+        <div className="flex flex-wrap items-center gap-4">
+          <AppNavLinks />
+          <LogoutButton />
+        </div>
       </header>
 
       {data.alpacaError ? (
         <div className="rounded-lg border border-red-900/50 bg-red-950/20 px-4 py-3 text-sm text-red-200">
           {data.alpacaError}
+        </div>
+      ) : null}
+
+      {config.cronTestMode ? (
+        <div className="rounded-lg border border-amber-900/50 bg-amber-950/20 px-4 py-3 text-sm text-amber-200">
+          Cron test mode: buy window ~{config.cronTestBuyEt} ET, sell window ~{config.cronTestSellEt} ET.
+          Revert vercel.json and remove CRON_TEST_MODE after testing.
         </div>
       ) : null}
 

@@ -55,7 +55,9 @@ Open [http://localhost:3000/login](http://localhost:3000/login).
 1. Import the repo in Vercel
 2. Add the same env vars in Project Settings
 3. Attach a Postgres database and set `DATABASE_URL`
-4. Deploy — `vercel.json` configures weekday crons:
+4. Deploy — `vercel.json` configures weekday crons (see **Cron test mode** below for current test schedule).
+
+Production schedule (restore after testing) is in `vercel.production.json`:
 
 - `/api/cron/sell` at `29 13 * * 1-5` UTC (9:29 AM EDT)
 - `/api/cron/buy` at `55 19 * * 1-5` UTC (3:55 PM EDT)
@@ -71,6 +73,24 @@ Vercel Cron sends this automatically when `CRON_SECRET` is set in the project.
 ### DST note
 
 Cron schedules are UTC. After switching to EST, update `vercel.json` cron times (sell → `29 14`, buy → `55 20`) or use Vercel Pro for denser schedules. Route handlers also gate on Alpaca clock windows.
+
+## Cron test mode (verify Vercel Hobby scheduling)
+
+Hobby crons fire **once per hour** (not at an exact minute). Logs are only visible for a short window on the free plan.
+
+To test during market hours tomorrow:
+
+1. Set Production env: `CRON_TEST_MODE=true`
+2. Optional: `CRON_TEST_BUY_ET=10:00`, `CRON_TEST_SELL_ET=11:00`
+3. Deploy with current `vercel.json` (morning UTC hours):
+   - Buy cron: `5 14 * * 1-5` → ~10:00–10:59 AM ET
+   - Sell cron: `5 15 * * 1-5` → ~11:00–11:59 AM ET
+4. Watch Vercel Logs around those times (filter `requestPath:/api/cron/buy`)
+5. After test: copy `vercel.production.json` → `vercel.json`, remove `CRON_TEST_MODE`, redeploy
+
+The dashboard shows an amber banner when cron test mode is on.
+
+Cron runs are stored in the `CronRun` table and visible at `/logs` (Dashboard → Logs).
 
 ## Manual cron test
 

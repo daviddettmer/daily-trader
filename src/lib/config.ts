@@ -19,6 +19,13 @@ export const config = {
   // Vercel sets VERCEL_ENV=preview on Preview deployments (no manual env needed)
   isPreview:
     env("VERCEL_ENV") === "preview" || env("APP_ENV") === "preview",
+  // Hobby crons may fire anytime within the scheduled UTC hour — widen acceptance windows
+  buyCronWindowMinutes: Number(env("BUY_CRON_WINDOW_MINUTES") || "60"),
+  sellCronWindowMinutes: Number(env("SELL_CRON_WINDOW_MINUTES") || "45"),
+  // Temporary: morning test crons (see README). Remove after verifying.
+  cronTestMode: env("CRON_TEST_MODE") === "true",
+  cronTestBuyEt: env("CRON_TEST_BUY_ET") || "10:00",
+  cronTestSellEt: env("CRON_TEST_SELL_ET") || "11:00",
 };
 
 export function assertConfig() {

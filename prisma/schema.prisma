@@ -25,3 +25,15 @@ model EquitySnapshot {
 
   @@index([capturedAt])
 }
+
+model CronRun {
+  id        String   @id @default(cuid())
+  route     String
+  status    String
+  reason    String?
+  error     String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

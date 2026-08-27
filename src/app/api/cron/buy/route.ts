@@ -1,18 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/auth";
-import { isWithinBuyWindow } from "@/lib/marketHours";
+import { recordCronRun } from "@/lib/cronLog";
+import { formatEtDateTime, isWithinBuyWindow } from "@/lib/marketHours";
 import { processBuyCron } from "@/lib/strategy";
 
 export async function GET(request: NextRequest) {
   if (!verifyCronAuth(request)) {
+    console.warn("[cron/buy] unauthorized");
+    await recordCronRun({ route: "buy", status: "unauthorized" });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const inWindow = await isWithinBuyWindow();
-  if (!inWindow) {
-    return NextResponse.json({ skipped: true, reason: "outside_buy_window" });
-  }
+  const now = new Date();
 
-  const results = await processBuyCron();
-  return NextResponse.json({ ok: true, results });
+  try {
+    const inWindow = await isWithinBuyWindow(now);
+    if (!inWindow) {
+      const body = {
+        skipped: true,
+        reason: "outside_buy_window",
+        at: formatEtDateTime(now),
+        hint: "Vercel Hobby may fire early in the UTC hour; widen BUY_CRON_WINDOW_MINUTES if needed.",
+      };
+      console.info("[cron/buy] skipped", body);
+      await recordCronRun({
+        route: "buy",
+        status: "skipped",
+        reason: body.reason,
+        details: { at: body.at, hint: body.hint },
+      });
+      return NextResponse.json(body);
+    }
+
+    const results = await processBuyCron();
+    const at = formatEtDateTime(now);
+    console.info("[cron/buy] ok", { at, results });
+    await recordCronRun({
+      route: "buy",
+      status: "ok",
+      details: { at, results },
+    });
+    return NextResponse.json({
+      ok: true,
+      at,
+      results,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[cron/buy] error", error);
+    await recordCronRun({
+      route: "buy",
+      status: "error",
+      error: message,
+      details: { at: formatEtDateTime(now) },
+    });
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
