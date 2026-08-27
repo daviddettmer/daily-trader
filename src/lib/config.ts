@@ -1,14 +1,20 @@
+function env(name: string) {
+  const raw = process.env[name] ?? "";
+  // Strip accidental quotes/whitespace from Vercel or .env pastes
+  return raw.trim().replace(/^["']|["']$/g, "");
+}
+
 export const config = {
-  appPassword: process.env.APP_PASSWORD ?? "",
-  appUsername: process.env.APP_USERNAME ?? "",
-  sessionSecret: process.env.SESSION_SECRET ?? "",
-  cronSecret: process.env.CRON_SECRET ?? "",
-  alpacaApiKey: process.env.ALPACA_API_KEY ?? "",
-  alpacaSecretKey: process.env.ALPACA_SECRET_KEY ?? "",
-  alpacaPaper: process.env.ALPACA_PAPER !== "false",
-  sellAtEt: process.env.SELL_AT_ET ?? "09:29",
-  buyBeforeCloseMinutes: Number(process.env.BUY_BEFORE_CLOSE_MINUTES ?? "5"),
-  testBuyNotional: Number(process.env.TEST_BUY_NOTIONAL ?? "10"),
+  appPassword: env("APP_PASSWORD"),
+  appUsername: env("APP_USERNAME"),
+  sessionSecret: env("SESSION_SECRET"),
+  cronSecret: env("CRON_SECRET"),
+  alpacaApiKey: env("ALPACA_API_KEY"),
+  alpacaSecretKey: env("ALPACA_SECRET_KEY"),
+  alpacaPaper: env("ALPACA_PAPER") !== "false",
+  sellAtEt: env("SELL_AT_ET") || "09:29",
+  buyBeforeCloseMinutes: Number(env("BUY_BEFORE_CLOSE_MINUTES") || "5"),
+  testBuyNotional: Number(env("TEST_BUY_NOTIONAL") || "10"),
   timezone: "America/New_York" as const,
 };
 

@@ -22,6 +22,12 @@ export default async function DashboardPage() {
         <LogoutButton />
       </header>
 
+      {data.alpacaError ? (
+        <div className="rounded-lg border border-red-900/50 bg-red-950/20 px-4 py-3 text-sm text-red-200">
+          {data.alpacaError}
+        </div>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-[1fr_2fr]">
         <div className="card">
           <p className="text-sm text-slate-400">Strategy total</p>
