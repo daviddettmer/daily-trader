@@ -3,6 +3,9 @@ import { config } from "@/lib/config";
 
 export default function LoginPage() {
   return (
-    <LoginForm usernameRequired={Boolean(config.appUsername)} />
+    <LoginForm
+      usernameRequired={Boolean(config.appUsername)}
+      isPreview={config.isPreview}
+    />
   );
 }

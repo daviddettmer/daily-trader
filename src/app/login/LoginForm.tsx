@@ -5,8 +5,10 @@ import { useState } from "react";
 
 export default function LoginForm({
   usernameRequired,
+  isPreview,
 }: {
   usernameRequired: boolean;
+  isPreview: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,7 +49,12 @@ export default function LoginForm({
     <main className="mx-auto flex min-h-screen max-w-md items-center px-4">
       <form onSubmit={handleSubmit} className="card w-full space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold">Daily Trader</h1>
+          <h1 className="text-2xl font-semibold">
+            Daily Trader
+            {isPreview ? (
+              <span className="font-normal text-slate-400"> (Preview)</span>
+            ) : null}
+          </h1>
           <p className="text-sm text-slate-400">Sign in to manage your overnight bot.</p>
         </div>
         <div>

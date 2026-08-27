@@ -16,6 +16,9 @@ export const config = {
   buyBeforeCloseMinutes: Number(env("BUY_BEFORE_CLOSE_MINUTES") || "5"),
   testBuyNotional: Number(env("TEST_BUY_NOTIONAL") || "10"),
   timezone: "America/New_York" as const,
+  // Vercel sets VERCEL_ENV=preview on Preview deployments (no manual env needed)
+  isPreview:
+    env("VERCEL_ENV") === "preview" || env("APP_ENV") === "preview",
 };
 
 export function assertConfig() {

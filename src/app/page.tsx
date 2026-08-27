@@ -1,4 +1,5 @@
 import { AddTickerForm } from "@/components/AddTickerForm";
+import { AppTitle } from "@/components/AppTitle";
 import { EquityChart } from "@/components/EquityChart";
 import { LogoutButton } from "@/components/LogoutButton";
 import { WatchlistTable } from "@/components/WatchlistTable";
@@ -14,7 +15,9 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Daily Trader</h1>
+          <h1 className="text-3xl font-semibold">
+            <AppTitle />
+          </h1>
           <p className="text-sm text-slate-400">
             Overnight buy-at-close / sell-at-open compounding strategy
           </p>
