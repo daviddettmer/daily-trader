@@ -9,6 +9,8 @@ export type TradingSession = {
   close: Date;
 };
 
+const HOBBY_CRON_HOUR_MS = 60 * 60 * 1000;
+
 function parseEtTimeOnDate(dateStr: string, timeEt: string) {
   const parsed = parse(`${dateStr} ${timeEt}`, "yyyy-MM-dd HH:mm", new Date());
   return fromZonedTime(parsed, config.timezone);
@@ -17,6 +19,18 @@ function parseEtTimeOnDate(dateStr: string, timeEt: string) {
 function parseTimeParts(time: string) {
   const [hours, minutes] = time.split(":").map(Number);
   return { hours, minutes };
+}
+
+/** Full ET clock hour containing `timeEt` (e.g. 08:30 → 8:00–8:59 AM). Matches Vercel Hobby. */
+function isWithinEtClockHour(now: Date, timeEt: string) {
+  const { hours } = parseTimeParts(timeEt);
+  const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
+  const hourStart = parseEtTimeOnDate(
+    today,
+    `${String(hours).padStart(2, "0")}:00`
+  );
+  const hourEnd = new Date(hourStart.getTime() + HOBBY_CRON_HOUR_MS);
+  return now >= hourStart && now < hourEnd;
 }
 
 export async function getUpcomingSessions(daysAhead = 14): Promise<TradingSession[]> {
@@ -67,82 +81,32 @@ export async function getNextSellSession(now = new Date()) {
   return sessions.at(-1) ?? null;
 }
 
-function isWithinTestEtWindow(
-  now: Date,
-  timeEt: string,
-  leadMinutes: number,
-  trailMinutes: number
-) {
-  const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
-  const target = parseEtTimeOnDate(today, timeEt);
-  const windowStart = new Date(target.getTime() - leadMinutes * 60 * 1000);
-  const windowEnd = new Date(target.getTime() + trailMinutes * 60 * 1000);
-  return now >= windowStart && now <= windowEnd;
-}
-
 export async function isWithinSellWindow(now = new Date()) {
-  if (config.cronTestMode) {
-    const clock = await getClock();
-    if (!clock.is_open) return false;
-    return isWithinTestEtWindow(
-      now,
-      config.cronTestSellEt,
-      config.sellCronWindowMinutes,
-      60
-    );
-  }
+  const timeEt = config.cronTestMode ? config.cronTestSellEt : config.sellAtEt;
+
+  if (!isWithinEtClockHour(now, timeEt)) return false;
 
   const sessions = await getUpcomingSessions(7);
   const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
-  const session = sessions.find((s) => s.date === today);
-  if (!session) return false;
-
-  const sellAt = getSellSubmitTime(session);
-  const windowStart = new Date(
-    sellAt.getTime() - config.sellCronWindowMinutes * 60 * 1000
-  );
-  const windowEnd = new Date(sellAt.getTime() + 15 * 60 * 1000);
-
-  const clock = await getClock();
-  if (!clock.is_open) {
-    // Pre-open: allow the morning cron hour (e.g. Hobby fires ~9:00–9:59 AM ET)
-    return now >= windowStart && now <= windowEnd;
-  }
-
-  return now >= windowStart && now <= windowEnd;
+  return sessions.some((s) => s.date === today);
 }
 
 export async function isWithinBuyWindow(now = new Date()) {
   const clock = await getClock();
   if (!clock.is_open) return false;
 
-  if (config.cronTestMode) {
-    return isWithinTestEtWindow(
-      now,
-      config.cronTestBuyEt,
-      config.buyCronWindowMinutes,
-      60
-    );
-  }
-
   const sessions = await getUpcomingSessions(7);
   const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
   const session = sessions.find((s) => s.date === today);
   if (!session) return false;
 
-  const buyAt = getBuySubmitTime(session);
-  // Target buy ~3:55 PM ET; accept cron anytime in the last hour before close (Hobby plan)
-  const windowStart = new Date(
-    session.close.getTime() - config.buyCronWindowMinutes * 60 * 1000
-  );
-  const windowEnd = session.close;
-  const inWindow = now >= windowStart && now <= windowEnd;
+  if (config.cronTestMode) {
+    return isWithinEtClockHour(now, config.cronTestBuyEt);
+  }
 
-  // Also accept if we're within 2 min of the ideal buy time (Pro fires closer to schedule)
-  const tightStart = new Date(buyAt.getTime() - 2 * 60 * 1000);
-  if (now >= tightStart && now <= windowEnd) return true;
-
-  return inWindow;
+  // Hobby buy cron hour before close (e.g. 3:00–4:00 PM ET when close is 4:00 PM)
+  const windowStart = new Date(session.close.getTime() - HOBBY_CRON_HOUR_MS);
+  return now >= windowStart && now <= session.close;
 }
 
 export function formatEtDateTime(date: Date) {

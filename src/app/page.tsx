@@ -39,7 +39,6 @@ export default async function DashboardPage() {
       {config.cronTestMode ? (
         <div className="rounded-lg border border-amber-900/50 bg-amber-950/20 px-4 py-3 text-sm text-amber-200">
           Cron test mode: buy window ~{config.cronTestBuyEt} ET, sell window ~{config.cronTestSellEt} ET.
-          Revert vercel.json and remove CRON_TEST_MODE after testing.
         </div>
       ) : null}
 

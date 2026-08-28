@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         skipped: true,
         reason: "outside_buy_window",
         at: formatEtDateTime(now),
-        hint: "Vercel Hobby may fire early in the UTC hour; widen BUY_CRON_WINDOW_MINUTES if needed.",
+        hint: "Buy cron only runs during the hour before market close (e.g. 3:00–4:00 PM ET).",
       };
       console.info("[cron/buy] skipped", body);
       await recordCronRun({

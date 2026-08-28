@@ -12,17 +12,14 @@ export const config = {
   alpacaApiKey: env("ALPACA_API_KEY"),
   alpacaSecretKey: env("ALPACA_SECRET_KEY"),
   alpacaPaper: env("ALPACA_PAPER") !== "false",
-  sellAtEt: env("SELL_AT_ET") || "09:29",
+  sellAtEt: env("SELL_AT_ET") || "08:30",
   buyBeforeCloseMinutes: Number(env("BUY_BEFORE_CLOSE_MINUTES") || "5"),
   testBuyNotional: Number(env("TEST_BUY_NOTIONAL") || "10"),
   timezone: "America/New_York" as const,
   // Vercel sets VERCEL_ENV=preview on Preview deployments (no manual env needed)
   isPreview:
     env("VERCEL_ENV") === "preview" || env("APP_ENV") === "preview",
-  // Hobby crons may fire anytime within the scheduled UTC hour — widen acceptance windows
-  buyCronWindowMinutes: Number(env("BUY_CRON_WINDOW_MINUTES") || "60"),
-  sellCronWindowMinutes: Number(env("SELL_CRON_WINDOW_MINUTES") || "45"),
-  // Temporary: morning test crons (see README). Remove after verifying.
+  // Optional: daytime cron test (CRON_TEST_MODE=true)
   cronTestMode: env("CRON_TEST_MODE") === "true",
   cronTestBuyEt: env("CRON_TEST_BUY_ET") || "10:00",
   cronTestSellEt: env("CRON_TEST_SELL_ET") || "11:00",
