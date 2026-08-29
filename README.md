@@ -7,6 +7,7 @@ Overnight compounding stock bot on Vercel. Buy near market close, sell at the ne
 - Multi-ticker watchlist with starting dollar amounts
 - Automatic buy-at-close / sell-at-open via Vercel Cron + Alpaca
 - Morning sell submitted in the **8 AM ET hour** (target **8:30 AM**) with `extended_hours: false` (fills at regular open)
+- Afternoon buy submitted in the **2 PM ET hour** (target **2:59 PM**) while the market is still open
 - Compounding: sell proceeds become the next buy amount
 - Add money mid-cycle (queued until after the next sell if in position)
 - Dashboard strategy total, growth chart, next trade previews
@@ -58,9 +59,9 @@ Open [http://localhost:3000/login](http://localhost:3000/login).
 4. Deploy — `vercel.json` configures weekday crons:
 
 - `/api/cron/sell` at `5 12 * * 1-5` UTC (~8:00–8:59 AM EDT; order waits for open)
-- `/api/cron/buy` at `55 19 * * 1-5` UTC (~3:00–3:59 PM EDT)
+- `/api/cron/buy` at `59 18 * * 1-5` UTC (~2:00–2:59 PM EDT)
 
-Cron handlers accept the full Hobby hour: sell during the **8 AM ET** hour, buy during the hour before close (3:00–4:00 PM ET).
+Cron handlers accept the full Hobby hour: sell during the **8 AM ET** hour, buy during the **2 PM ET** hour.
 
 Cron requests must include:
 
@@ -72,7 +73,7 @@ Vercel Cron sends this automatically when `CRON_SECRET` is set in the project.
 
 ### DST note
 
-Cron schedules are UTC. After switching to EST, update `vercel.json` cron times (sell → `5 13`, buy → `55 20`) or use Vercel Pro for per-minute schedules. Route handlers accept the matching full ET clock hour.
+Cron schedules are UTC. After switching to EST, update `vercel.json` cron times (sell → `5 13`, buy → `59 19`) or use Vercel Pro for per-minute schedules. Route handlers accept the matching full ET clock hour.
 
 ## Cron test mode (optional)
 

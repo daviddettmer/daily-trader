@@ -58,8 +58,9 @@ export function getSellSubmitTime(session: TradingSession) {
 }
 
 export function getBuySubmitTime(session: TradingSession) {
+  const { hours, minutes } = parseTimeParts(config.buyAtEt);
   const zoned = toZonedTime(session.close, config.timezone);
-  zoned.setMinutes(zoned.getMinutes() - config.buyBeforeCloseMinutes);
+  zoned.setHours(hours, minutes, 0, 0);
   return fromZonedTime(zoned, config.timezone);
 }
 
@@ -95,18 +96,12 @@ export async function isWithinBuyWindow(now = new Date()) {
   const clock = await getClock();
   if (!clock.is_open) return false;
 
+  const timeEt = config.cronTestMode ? config.cronTestBuyEt : config.buyAtEt;
+  if (!isWithinEtClockHour(now, timeEt)) return false;
+
   const sessions = await getUpcomingSessions(7);
   const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
-  const session = sessions.find((s) => s.date === today);
-  if (!session) return false;
-
-  if (config.cronTestMode) {
-    return isWithinEtClockHour(now, config.cronTestBuyEt);
-  }
-
-  // Hobby buy cron hour before close (e.g. 3:00–4:00 PM ET when close is 4:00 PM)
-  const windowStart = new Date(session.close.getTime() - HOBBY_CRON_HOUR_MS);
-  return now >= windowStart && now <= session.close;
+  return sessions.some((s) => s.date === today);
 }
 
 export function formatEtDateTime(date: Date) {

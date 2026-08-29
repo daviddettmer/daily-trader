@@ -13,7 +13,7 @@ export const config = {
   alpacaSecretKey: env("ALPACA_SECRET_KEY"),
   alpacaPaper: env("ALPACA_PAPER") !== "false",
   sellAtEt: env("SELL_AT_ET") || "08:30",
-  buyBeforeCloseMinutes: Number(env("BUY_BEFORE_CLOSE_MINUTES") || "5"),
+  buyAtEt: env("BUY_AT_ET") || "14:59",
   testBuyNotional: Number(env("TEST_BUY_NOTIONAL") || "10"),
   timezone: "America/New_York" as const,
   // Vercel sets VERCEL_ENV=preview on Preview deployments (no manual env needed)

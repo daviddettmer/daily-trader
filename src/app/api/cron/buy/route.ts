@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         skipped: true,
         reason: "outside_buy_window",
         at: formatEtDateTime(now),
-        hint: "Buy cron only runs during the hour before market close (e.g. 3:00–4:00 PM ET).",
+        hint: "Buy cron only runs during the 2 PM ET hour (e.g. 2:00–2:59 PM ET).",
       };
       console.info("[cron/buy] skipped", body);
       await recordCronRun({
