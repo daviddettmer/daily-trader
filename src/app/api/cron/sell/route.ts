@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/auth";
 import { recordCronRun } from "@/lib/cronLog";
-import { formatEtDateTime, isWithinSellWindow } from "@/lib/marketHours";
+import { checkSellWindow, formatEtDateTime } from "@/lib/marketHours";
 import { processSellCron } from "@/lib/strategy";
 
 export async function GET(request: NextRequest) {
@@ -14,19 +14,20 @@ export async function GET(request: NextRequest) {
   const now = new Date();
 
   try {
-    const inWindow = await isWithinSellWindow(now);
-    if (!inWindow) {
+    const window = await checkSellWindow(now);
+    if (!window.inWindow) {
       const body = {
         skipped: true,
-        reason: "outside_sell_window",
+        reason: window.reason ?? "outside_sell_window",
         at: formatEtDateTime(now),
+        hint: window.hint,
       };
       console.info("[cron/sell] skipped", body);
       await recordCronRun({
         route: "sell",
         status: "skipped",
         reason: body.reason,
-        details: { at: body.at },
+        details: { at: body.at, hint: body.hint },
       });
       return NextResponse.json(body);
     }

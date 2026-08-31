@@ -82,26 +82,86 @@ export async function getNextSellSession(now = new Date()) {
   return sessions.at(-1) ?? null;
 }
 
-export async function isWithinSellWindow(now = new Date()) {
-  const timeEt = config.cronTestMode ? config.cronTestSellEt : config.sellAtEt;
+export type WindowCheck = {
+  inWindow: boolean;
+  reason?: string;
+  hint?: string;
+};
 
-  if (!isWithinEtClockHour(now, timeEt)) return false;
+function etClockHourWindow(timeEt: string) {
+  const { hours } = parseTimeParts(timeEt);
+  return `${String(hours).padStart(2, "0")}:00`;
+}
+
+export async function checkSellWindow(now = new Date()): Promise<WindowCheck> {
+  const windowEt = config.cronTestMode
+    ? etClockHourWindow(config.cronTestSellEt)
+    : etClockHourWindow(`${config.sellCronHourEt}:00`);
+
+  if (!isWithinEtClockHour(now, windowEt)) {
+    return {
+      inWindow: false,
+      reason: "outside_sell_hour",
+      hint: `Sell cron only runs during the ${windowEt.slice(0, 2)}:00–${windowEt.slice(0, 2)}:59 ET hour (SELL_CRON_HOUR_ET / cron schedule).`,
+    };
+  }
 
   const sessions = await getUpcomingSessions(7);
   const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
-  return sessions.some((s) => s.date === today);
+  if (!sessions.some((s) => s.date === today)) {
+    return {
+      inWindow: false,
+      reason: "no_trading_session",
+      hint: "Alpaca calendar has no session for today (holiday or calendar API error).",
+    };
+  }
+
+  return { inWindow: true };
+}
+
+export async function checkBuyWindow(now = new Date()): Promise<WindowCheck> {
+  const clock = await getClock();
+  if (!clock.is_open) {
+    return {
+      inWindow: false,
+      reason: "market_closed",
+      hint: "Buy cron only runs while the regular session is open.",
+    };
+  }
+
+  const windowEt = config.cronTestMode
+    ? etClockHourWindow(config.cronTestBuyEt)
+    : etClockHourWindow(`${config.buyCronHourEt}:00`);
+
+  if (!isWithinEtClockHour(now, windowEt)) {
+    return {
+      inWindow: false,
+      reason: "outside_buy_hour",
+      hint: `Buy cron only runs during the ${windowEt.slice(0, 2)}:00–${windowEt.slice(0, 2)}:59 ET hour (BUY_CRON_HOUR_ET / cron schedule).`,
+    };
+  }
+
+  const sessions = await getUpcomingSessions(7);
+  const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
+  if (!sessions.some((s) => s.date === today)) {
+    return {
+      inWindow: false,
+      reason: "no_trading_session",
+      hint: "Alpaca calendar has no session for today (holiday or calendar API error).",
+    };
+  }
+
+  return { inWindow: true };
+}
+
+export async function isWithinSellWindow(now = new Date()) {
+  const result = await checkSellWindow(now);
+  return result.inWindow;
 }
 
 export async function isWithinBuyWindow(now = new Date()) {
-  const clock = await getClock();
-  if (!clock.is_open) return false;
-
-  const timeEt = config.cronTestMode ? config.cronTestBuyEt : config.buyAtEt;
-  if (!isWithinEtClockHour(now, timeEt)) return false;
-
-  const sessions = await getUpcomingSessions(7);
-  const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
-  return sessions.some((s) => s.date === today);
+  const result = await checkBuyWindow(now);
+  return result.inWindow;
 }
 
 export function formatEtDateTime(date: Date) {

@@ -13,7 +13,11 @@ export const config = {
   alpacaSecretKey: env("ALPACA_SECRET_KEY"),
   alpacaPaper: env("ALPACA_PAPER") !== "false",
   sellAtEt: env("SELL_AT_ET") || "08:30",
+  // ET clock hour for sell cron window (must match vercel.json UTC hour; default 8 AM)
+  sellCronHourEt: env("SELL_CRON_HOUR_ET") || "08",
   buyAtEt: env("BUY_AT_ET") || "14:59",
+  // ET clock hour for buy cron window (must match vercel.json UTC hour; default 2 PM)
+  buyCronHourEt: env("BUY_CRON_HOUR_ET") || "14",
   testBuyNotional: Number(env("TEST_BUY_NOTIONAL") || "10"),
   timezone: "America/New_York" as const,
   // Vercel sets VERCEL_ENV=preview on Preview deployments (no manual env needed)

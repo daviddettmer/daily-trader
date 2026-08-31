@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/auth";
 import { recordCronRun } from "@/lib/cronLog";
-import { formatEtDateTime, isWithinBuyWindow } from "@/lib/marketHours";
+import { checkBuyWindow, formatEtDateTime } from "@/lib/marketHours";
 import { processBuyCron } from "@/lib/strategy";
 
 export async function GET(request: NextRequest) {
@@ -14,13 +14,13 @@ export async function GET(request: NextRequest) {
   const now = new Date();
 
   try {
-    const inWindow = await isWithinBuyWindow(now);
-    if (!inWindow) {
+    const window = await checkBuyWindow(now);
+    if (!window.inWindow) {
       const body = {
         skipped: true,
-        reason: "outside_buy_window",
+        reason: window.reason ?? "outside_buy_window",
         at: formatEtDateTime(now),
-        hint: "Buy cron only runs during the 2 PM ET hour (e.g. 2:00–2:59 PM ET).",
+        hint: window.hint,
       };
       console.info("[cron/buy] skipped", body);
       await recordCronRun({
