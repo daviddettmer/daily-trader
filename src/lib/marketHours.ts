@@ -93,16 +93,34 @@ function etClockHourWindow(timeEt: string) {
   return `${String(hours).padStart(2, "0")}:00`;
 }
 
-export async function checkSellWindow(now = new Date()): Promise<WindowCheck> {
-  const windowEt = config.cronTestMode
-    ? etClockHourWindow(config.cronTestSellEt)
-    : etClockHourWindow(`${config.sellCronHourEt}:00`);
+/** Start inclusive, end exclusive (e.g. 08:00–10:31 means >= 8:00 and < 10:31). */
+function isWithinEtTimeRange(now: Date, startEt: string, endBeforeEt: string) {
+  const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
+  const start = parseEtTimeOnDate(today, startEt);
+  const end = parseEtTimeOnDate(today, endBeforeEt);
+  return now >= start && now < end;
+}
 
-  if (!isWithinEtClockHour(now, windowEt)) {
+export async function checkSellWindow(now = new Date()): Promise<WindowCheck> {
+  if (config.cronTestMode) {
+    if (!isWithinEtClockHour(now, etClockHourWindow(config.cronTestSellEt))) {
+      return {
+        inWindow: false,
+        reason: "outside_sell_hour",
+        hint: `Cron test mode: sell window is the ${config.cronTestSellEt} ET hour.`,
+      };
+    }
+  } else if (
+    !isWithinEtTimeRange(
+      now,
+      config.sellWindowStartEt,
+      config.sellWindowEndEt
+    )
+  ) {
     return {
       inWindow: false,
-      reason: "outside_sell_hour",
-      hint: `Sell cron only runs during the ${windowEt.slice(0, 2)}:00–${windowEt.slice(0, 2)}:59 ET hour (SELL_CRON_HOUR_ET / cron schedule).`,
+      reason: "outside_sell_window",
+      hint: `Sell cron runs from ${config.sellWindowStartEt} ET up to (but not including) ${config.sellWindowEndEt} ET.`,
     };
   }
 
@@ -129,18 +147,6 @@ export async function checkBuyWindow(now = new Date()): Promise<WindowCheck> {
     };
   }
 
-  const windowEt = config.cronTestMode
-    ? etClockHourWindow(config.cronTestBuyEt)
-    : etClockHourWindow(`${config.buyCronHourEt}:00`);
-
-  if (!isWithinEtClockHour(now, windowEt)) {
-    return {
-      inWindow: false,
-      reason: "outside_buy_hour",
-      hint: `Buy cron only runs during the ${windowEt.slice(0, 2)}:00–${windowEt.slice(0, 2)}:59 ET hour (BUY_CRON_HOUR_ET / cron schedule).`,
-    };
-  }
-
   const sessions = await getUpcomingSessions(7);
   const today = formatInTimeZone(now, config.timezone, "yyyy-MM-dd");
   if (!sessions.some((s) => s.date === today)) {
@@ -148,6 +154,28 @@ export async function checkBuyWindow(now = new Date()): Promise<WindowCheck> {
       inWindow: false,
       reason: "no_trading_session",
       hint: "Alpaca calendar has no session for today (holiday or calendar API error).",
+    };
+  }
+
+  if (config.cronTestMode) {
+    if (!isWithinEtClockHour(now, etClockHourWindow(config.cronTestBuyEt))) {
+      return {
+        inWindow: false,
+        reason: "outside_buy_hour",
+        hint: `Cron test mode: buy window is the ${config.cronTestBuyEt} ET hour.`,
+      };
+    }
+  } else if (
+    !isWithinEtTimeRange(
+      now,
+      config.buyWindowStartEt,
+      config.buyWindowEndEt
+    )
+  ) {
+    return {
+      inWindow: false,
+      reason: "outside_buy_window",
+      hint: `Buy cron runs from ${config.buyWindowStartEt} ET up to (but not including) ${config.buyWindowEndEt} ET.`,
     };
   }
 

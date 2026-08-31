@@ -61,7 +61,7 @@ Open [http://localhost:3000/login](http://localhost:3000/login).
 - `/api/cron/sell` at `5 12 * * 1-5` UTC (~8:00–8:59 AM EDT; order waits for open)
 - `/api/cron/buy` at `59 18 * * 1-5` UTC (~2:00–2:59 PM EDT)
 
-Cron handlers accept the full Hobby hour: sell during **SELL_CRON_HOUR_ET** (default 8 AM), buy during **BUY_CRON_HOUR_ET** (default 2 PM). `SELL_AT_ET` / `BUY_AT_ET` are display targets only.
+Cron handlers use inclusive start and exclusive end: sell **>= 8:00 AM and < 10:31 AM**, buy **>= 2:00 PM and < 4:01 PM** (market must be open).
 
 Cron requests must include:
 
