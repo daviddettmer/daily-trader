@@ -1,11 +1,14 @@
 import { db } from "./db";
 import { getPositionsMap } from "./alpaca";
 import { config } from "./config";
+import { reconcileAllWatchlistProceeds } from "./strategy";
 import { computeTotalEquity, lineEquity } from "./equity";
 import { computeNextTrade, decimalToNumber } from "./nextTrade";
 import { WatchlistRow } from "@/components/WatchlistTable";
 
 export async function getDashboardData() {
+  await reconcileAllWatchlistProceeds();
+
   const items = await db.watchlistItem.findMany({
     orderBy: { symbol: "asc" },
   });
